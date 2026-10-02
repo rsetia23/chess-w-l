@@ -1,0 +1,1743 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chess Record</title>
+    <meta name="theme-color" content="#0f1210" />
+    <meta
+      name="description"
+      content="Track your chess.com wins, losses, and draws for the week."
+    />
+
+    <!-- Without these the link unfurls as bare text — which matters most
+         right after someone shares the record image. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Chess Record" />
+    <meta
+      property="og:description"
+      content="Track your chess.com wins, losses, and draws for the week."
+    />
+    <meta property="og:url" content="https://chess.rahulsetia.me/" />
+    <meta property="og:image" content="https://chess.rahulsetia.me/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Chess Record" />
+    <meta
+      name="twitter:description"
+      content="Track your chess.com wins, losses, and draws for the week."
+    />
+    <meta name="twitter:image" content="https://chess.rahulsetia.me/og.png" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23171b18'/%3E%3Cg fill='%2386efac'%3E%3Cpath d='M7 5h4v3.5h3V5h4v3.5h3V5h4v6.5H7z'/%3E%3Cpath d='M10 11h12l-1.5 9h-9z'/%3E%3Crect x='7' y='19.5' width='18' height='4.5' rx='1.5'/%3E%3C/g%3E%3C/svg%3E"
+    />
+    <style>
+      :root {
+        --bg: #0f1210;
+        --panel: #171b18;
+        --border: #262b26;
+        --text: #e8ece7;
+        --muted: #7c8a7e;
+        --win: #4ade80;
+        --loss: #f87171;
+        --draw: #94a3b8;
+        --accent: #86efac;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background:
+          radial-gradient(
+            circle at 20% 20%,
+            rgba(134, 239, 172, 0.06),
+            transparent 40%
+          ),
+          radial-gradient(
+            circle at 80% 80%,
+            rgba(134, 239, 172, 0.04),
+            transparent 40%
+          ),
+          var(--bg);
+        font-family: "Courier New", ui-monospace, monospace;
+        color: var(--text);
+        padding: 24px;
+      }
+
+      .card {
+        width: 100%;
+        max-width: 420px;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 28px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+      }
+
+      .header {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        margin-bottom: 20px;
+      }
+
+      h1 {
+        font-size: 15px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin: 0;
+        font-weight: 600;
+      }
+
+      .date-picker {
+        position: relative;
+      }
+
+      .date-btn {
+        font-family: inherit;
+        font-size: 12px;
+        color: var(--muted);
+        background: none;
+        border: none;
+        padding: 4px 0;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .date-btn:hover {
+        color: var(--text);
+      }
+
+      .date-btn::after {
+        content: "▾";
+        font-size: 9px;
+        opacity: 0.7;
+      }
+
+      .day-dropdown {
+        position: absolute;
+        top: calc(100% + 6px);
+        right: 0;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 6px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 140px;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+        z-index: 10;
+      }
+
+      .day-dropdown.hidden {
+        display: none;
+      }
+
+      .day-option {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: none;
+        border: none;
+        border-radius: 6px;
+        padding: 8px 10px;
+        font-family: inherit;
+        font-size: 13px;
+        color: var(--text);
+        cursor: pointer;
+        text-align: left;
+      }
+
+      .day-option:hover {
+        background: var(--bg);
+      }
+
+      .day-option.selected {
+        color: var(--accent);
+        font-weight: 700;
+      }
+
+      .day-option .dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--accent);
+        opacity: 0;
+      }
+
+      .day-option.is-today .dot {
+        opacity: 1;
+      }
+
+      .setup {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .setup input {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 12px 14px;
+        color: var(--text);
+        font-family: inherit;
+        font-size: 15px;
+      }
+
+      .setup input:focus {
+        outline: none;
+        border-color: var(--accent);
+      }
+
+      /* The input needs its own stacking context so the suggestion list can
+         hang below it without the flex gap pushing the button around. */
+      .input-wrap {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .suggest {
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 0;
+        right: 0;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 6px;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+        z-index: 20;
+        max-height: 232px;
+        overflow-y: auto;
+      }
+
+      .suggest.hidden {
+        display: none;
+      }
+
+      /* Names the source explicitly — an empty result should read as "you're
+         not a well-known player", not "this search is broken". */
+      .suggest-head {
+        font-size: 10px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--muted);
+        padding: 4px 10px 8px;
+      }
+
+      .suggest-item {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 10px;
+        width: 100%;
+        background: none;
+        border: none;
+        border-radius: 6px;
+        padding: 9px 10px;
+        font-family: inherit;
+        font-size: 14px;
+        color: var(--text);
+        cursor: pointer;
+        text-align: left;
+      }
+
+      .suggest-name {
+        display: flex;
+        align-items: baseline;
+        gap: 7px;
+        min-width: 0;
+      }
+
+      /* Fixed width so the usernames line up in a column regardless of
+         whether a row carries a badge. */
+      .title-badge {
+        flex: none;
+        width: 26px;
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        color: var(--accent);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        padding: 2px 0;
+        text-align: center;
+      }
+
+      .title-badge.empty {
+        visibility: hidden;
+      }
+
+      .suggest-real {
+        flex: none;
+        font-size: 11px;
+        color: var(--muted);
+      }
+
+      .suggest-item:hover,
+      .suggest-item.active {
+        background: var(--bg);
+        color: var(--accent);
+      }
+
+      /* Direct child only — the suggestion list holds <button>s too, and a
+         bare `.setup button` outranks `.suggest-item` and restyles them. */
+      .setup > button {
+        background: var(--accent);
+        border: none;
+        border-radius: 8px;
+        padding: 12px 14px;
+        color: #0f1210;
+        font-family: inherit;
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        cursor: pointer;
+        text-transform: uppercase;
+      }
+
+      .setup > button:hover:not(:disabled) {
+        filter: brightness(1.08);
+      }
+
+      .setup > button:disabled {
+        opacity: 0.6;
+        cursor: default;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      .username-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 22px;
+      }
+
+      .username-row .name {
+        font-size: 18px;
+        font-weight: 700;
+      }
+
+      .username-row .name::before {
+        content: "♜ ";
+        color: var(--accent);
+      }
+
+      .change-link {
+        background: none;
+        border: none;
+        color: var(--muted);
+        font-family: inherit;
+        font-size: 12px;
+        text-decoration: underline;
+        cursor: pointer;
+        padding: 0;
+      }
+
+      .change-link:hover {
+        color: var(--text);
+      }
+
+      .row-actions {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      /* Borderless so it sits at the same visual weight as "change" — the
+         icon carries it. Type matches .stat .label so it reads as part of
+         the card's existing vocabulary rather than a bolted-on control. */
+      .share-btn {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: none;
+        border: none;
+        padding: 0;
+        color: var(--muted);
+        font-family: inherit;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: color 0.15s ease;
+      }
+
+      /* The label is only 13px tall — far under a usable touch target. This
+         grows the tappable area to ~37px without moving anything visually. */
+      .share-btn::after {
+        content: "";
+        position: absolute;
+        inset: -12px -8px;
+      }
+
+      .share-btn svg {
+        width: 13px;
+        height: 13px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.6;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .share-btn:hover:not(:disabled) {
+        color: var(--accent);
+      }
+
+      .share-btn:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+
+      .share-btn.done {
+        color: var(--accent);
+      }
+
+      .chips {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 8px;
+        margin-bottom: 18px;
+        overflow-x: auto;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+
+      .chips::-webkit-scrollbar {
+        display: none;
+      }
+
+      .chip {
+        /* Grow to fill the row, but never shrink narrower than the label —
+           otherwise centered text gets clipped on both sides. The row
+           scrolls instead (see .chips overflow-x). */
+        flex: 1 1 auto;
+        min-width: max-content;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 8px 10px;
+        color: var(--muted);
+        font-family: inherit;
+        font-size: 12px;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: clip;
+        text-align: center;
+        cursor: pointer;
+        transition:
+          border-color 0.15s ease,
+          color 0.15s ease,
+          background 0.15s ease;
+      }
+
+      /* Covers phones up to ~430px (iPhone Pro Max / large Android) so the
+         chip row fits without scrolling; above this the roomier chips fit too. */
+      @media (max-width: 440px) {
+        .card {
+          padding: 20px;
+        }
+        .chip {
+          padding: 8px 6px;
+          font-size: 11px;
+        }
+      }
+
+      .chip:hover {
+        color: var(--text);
+        border-color: #3a413b;
+      }
+
+      .chip.active {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #0f1210;
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+      }
+
+      .stat {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 18px 8px;
+        text-align: center;
+      }
+
+      .stat .label {
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 8px;
+      }
+
+      .stat .value {
+        font-size: 32px;
+        font-weight: 700;
+        line-height: 1;
+      }
+
+      .stat.win .value {
+        color: var(--win);
+      }
+      .stat.loss .value {
+        color: var(--loss);
+      }
+      .stat.draw .value {
+        color: var(--draw);
+      }
+
+      .rating-line {
+        margin-top: 16px;
+        display: flex;
+        align-items: baseline;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .rating-label {
+        font-size: 10px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .rating-value {
+        font-size: 20px;
+        font-weight: 700;
+        line-height: 1;
+      }
+
+      .rating-delta {
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .rating-delta.up {
+        color: var(--win);
+      }
+
+      .rating-delta.down {
+        color: var(--loss);
+      }
+
+      .meta {
+        margin-top: 18px;
+        font-size: 12px;
+        color: var(--muted);
+        text-align: center;
+        min-height: 16px;
+      }
+
+      .error {
+        color: var(--loss);
+      }
+
+      /* Opacity-only show/hide rather than the .hidden helper, which is
+         display:none !important and would kill the transition. */
+      .toast {
+        position: fixed;
+        left: 50%;
+        bottom: 28px;
+        z-index: 50;
+        max-width: min(420px, calc(100vw - 40px));
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-left: 3px solid var(--accent);
+        border-radius: 10px;
+        padding: 12px 16px;
+        font-size: 12px;
+        line-height: 1.5;
+        color: var(--text);
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+        opacity: 0;
+        transform: translateX(-50%) translateY(8px);
+        pointer-events: none;
+        transition:
+          opacity 0.2s ease,
+          transform 0.2s ease;
+      }
+
+      .toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+
+      .toast.error {
+        border-left-color: var(--loss);
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .toast {
+          transition: opacity 0.2s ease;
+          transform: translateX(-50%);
+        }
+        .toast.show {
+          transform: translateX(-50%);
+        }
+      }
+
+      .spinner {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border: 2px solid var(--border);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+        vertical-align: -2px;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="header">
+        <h1>Chess Record</h1>
+        <div class="date-picker hidden" id="datePicker">
+          <button id="dateLabel" class="date-btn"></button>
+          <div id="dayDropdown" class="day-dropdown hidden"></div>
+        </div>
+      </div>
+
+      <div id="setupView" class="setup">
+        <div class="input-wrap">
+          <!-- autocomplete="off": with our own suggestion list below, Chrome's
+               native autofill dropdown would render on top of it. -->
+          <input
+            id="usernameInput"
+            type="text"
+            placeholder="e.g. magnuscarlsen"
+            autocomplete="off"
+            role="combobox"
+            aria-expanded="false"
+            aria-autocomplete="list"
+            aria-controls="gmSuggest"
+          />
+          <div id="gmSuggest" class="suggest hidden" role="listbox">
+            <div class="suggest-head">Popular players</div>
+            <div id="gmSuggestList"></div>
+          </div>
+        </div>
+        <button id="saveBtn">Track this account</button>
+      </div>
+
+      <div id="statsView" class="hidden">
+        <div class="username-row">
+          <span class="name" id="displayName"></span>
+          <div class="row-actions">
+            <button
+              class="share-btn"
+              id="shareBtn"
+              type="button"
+              aria-label="Share record as an image"
+            >
+              <svg viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M4 10.2v3.3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3.3" />
+                <path d="M8 10.3V2.4" />
+                <path d="M5.2 5.2 8 2.3l2.8 2.9" />
+              </svg>
+              <span id="shareLabel">Share</span>
+            </button>
+            <button class="change-link" id="changeBtn">change</button>
+          </div>
+        </div>
+
+        <div class="chips" id="chipRow">
+          <button class="chip active" data-filter="all">All</button>
+          <button class="chip" data-filter="bullet">Bullet</button>
+          <button class="chip" data-filter="blitz">Blitz</button>
+          <button class="chip" data-filter="rapid">Rapid</button>
+          <button class="chip" data-filter="daily">Daily</button>
+        </div>
+
+        <div class="stats">
+          <div class="stat win">
+            <div class="label">Won</div>
+            <div class="value" id="winCount">–</div>
+          </div>
+          <div class="stat loss">
+            <div class="label">Lost</div>
+            <div class="value" id="lossCount">–</div>
+          </div>
+          <div class="stat draw">
+            <div class="label">Drew</div>
+            <div class="value" id="drawCount">–</div>
+          </div>
+        </div>
+
+        <div class="rating-line hidden" id="ratingLine"></div>
+        <div class="meta" id="metaLine"></div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <script>
+      const STORAGE_KEY = "chessRecordUsername";
+
+      const setupView = document.getElementById("setupView");
+      const statsView = document.getElementById("statsView");
+      const datePicker = document.getElementById("datePicker");
+      const usernameInput = document.getElementById("usernameInput");
+      const saveBtn = document.getElementById("saveBtn");
+      const gmSuggest = document.getElementById("gmSuggest");
+      const gmSuggestList = document.getElementById("gmSuggestList");
+      const changeBtn = document.getElementById("changeBtn");
+      const shareBtn = document.getElementById("shareBtn");
+      const toast = document.getElementById("toast");
+      const shareLabel = document.getElementById("shareLabel");
+      const displayName = document.getElementById("displayName");
+      const winCount = document.getElementById("winCount");
+      const lossCount = document.getElementById("lossCount");
+      const drawCount = document.getElementById("drawCount");
+      const metaLine = document.getElementById("metaLine");
+      const ratingLine = document.getElementById("ratingLine");
+      const dateLabel = document.getElementById("dateLabel");
+      const chipRow = document.getElementById("chipRow");
+      const dayDropdown = document.getElementById("dayDropdown");
+
+      const LOSS_RESULTS = new Set([
+        "checkmated",
+        "resigned",
+        "timeout",
+        "abandoned",
+        "lose",
+      ]);
+      const WIN_RESULTS = new Set(["win"]);
+
+      function todayLabel() {
+        return new Date().toLocaleDateString(undefined, {
+          month: "short",
+          day: "numeric",
+        });
+      }
+
+      // Trailing 7-day window ending today, as [start, end) local Date objects.
+      // Rolling rather than Monday-start so the week never shows empty future days.
+      function getWeekRange(now) {
+        const start = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate() - 6,
+          0,
+          0,
+          0,
+          0,
+        );
+        const end = new Date(
+          start.getFullYear(),
+          start.getMonth(),
+          start.getDate() + 7,
+          0,
+          0,
+          0,
+          0,
+        );
+        return { start, end };
+      }
+
+      function weekLabel(start, end) {
+        const lastDay = new Date(end.getTime() - 1);
+        const startStr = start.toLocaleDateString(undefined, {
+          month: "short",
+          day: "numeric",
+        });
+        const endStr = lastDay.toLocaleDateString(undefined, {
+          month: "short",
+          day: "numeric",
+        });
+        return `${startStr} – ${endStr}`;
+      }
+
+      function dayKeyFor(date) {
+        return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+      }
+      function monthsInRange(start, end) {
+        const months = [];
+        let y = start.getFullYear();
+        let m = start.getMonth(); // 0-indexed
+        while (
+          y < end.getFullYear() ||
+          (y === end.getFullYear() && m <= end.getMonth())
+        ) {
+          months.push({ year: y, month: m + 1 });
+          m++;
+          if (m > 11) {
+            m = 0;
+            y++;
+          }
+        }
+        return months;
+      }
+
+      // chess.com's documented limits: 100 requests/minute, bursts of up to 10
+      // concurrent. Requests go straight from the visitor's own browser, and a
+      // page load makes 1-2 of them serially, so we stay far inside both.
+      class RateLimitError extends Error {
+        constructor(retryAfter) {
+          super("rate limited by chess.com");
+          this.name = "RateLimitError";
+          this.retryAfter = retryAfter;
+        }
+      }
+
+      async function readJson(res, via) {
+        if (res.status === 404) return { status: 404 };
+        if (res.status === 429) {
+          const ra = parseInt(res.headers.get("Retry-After") || "", 10);
+          throw new RateLimitError(Number.isFinite(ra) ? ra : null);
+        }
+        if (!res.ok) throw new Error(`status ${res.status}${via}`);
+        return { status: 200, data: await res.json() };
+      }
+
+      // chess.com's API doesn't always send Access-Control-Allow-Origin, so a
+      // direct browser fetch can fail with a CORS error even though the request
+      // itself is fine. Fall back to a public CORS proxy when that happens.
+      //
+      // The fallback is deliberately scoped to fetch() rejecting, which only
+      // happens on network/CORS failure — never on an HTTP error status.
+      // Retrying a 429 through the proxy would amplify traffic exactly when
+      // we're being throttled, and the proxy's IP is pooled across all of its
+      // users, so it is far more likely to be rate limited than the visitor is.
+      async function fetchJsonWithCorsFallback(url) {
+        let res;
+        try {
+          res = await fetch(url, {
+            headers: { Accept: "application/json" },
+          });
+        } catch (networkErr) {
+          const proxied =
+            "https://corsproxy.io/?url=" + encodeURIComponent(url);
+          const proxyRes = await fetch(proxied, {
+            headers: { Accept: "application/json" },
+          });
+          return readJson(proxyRes, " (via proxy)");
+        }
+        return readJson(res, "");
+      }
+
+      const archiveCache = new Map();
+
+      function isPastMonth(year, month /* 1-indexed */) {
+        const now = new Date();
+        return (
+          year < now.getFullYear() ||
+          (year === now.getFullYear() && month < now.getMonth() + 1)
+        );
+      }
+
+      async function fetchWeekGames(username) {
+        const now = new Date();
+        const { start, end } = getWeekRange(now);
+        const months = monthsInRange(start, end);
+        const lowerUser = username.toLowerCase();
+        const weekGames = [];
+
+        for (const { year, month } of months) {
+          const mm = String(month).padStart(2, "0");
+          const url = `https://api.chess.com/pub/player/${encodeURIComponent(lowerUser)}/games/${year}/${mm}`;
+
+          // A finished month's archive can't change, so cache it for the
+          // session. The current month is always refetched — it's live data,
+          // and caching it would hide games you just played.
+          const cacheKey = `${lowerUser}/${year}-${mm}`;
+          const cacheable = isPastMonth(year, month);
+
+          let result;
+          if (cacheable && archiveCache.has(cacheKey)) {
+            result = archiveCache.get(cacheKey);
+          } else {
+            result = await fetchJsonWithCorsFallback(url);
+            if (cacheable) archiveCache.set(cacheKey, result);
+          }
+          if (result.status === 404) continue;
+
+          const games = result.data.games || [];
+
+          for (const g of games) {
+            const playedAt = new Date(g.end_time * 1000);
+            if (playedAt < start || playedAt >= end) continue;
+
+            // Capture our side, not just the result — it also carries the
+            // rating, which the archive reports POST-game (verified: the
+            // newest game's rating equals /stats current rating exactly).
+            let me;
+            if (
+              g.white &&
+              g.white.username &&
+              g.white.username.toLowerCase() === lowerUser
+            ) {
+              me = g.white;
+            } else if (
+              g.black &&
+              g.black.username &&
+              g.black.username.toLowerCase() === lowerUser
+            ) {
+              me = g.black;
+            } else {
+              continue;
+            }
+            const gameResult = me.result;
+
+            let outcome = "draw";
+            if (WIN_RESULTS.has(gameResult)) outcome = "win";
+            else if (LOSS_RESULTS.has(gameResult)) outcome = "loss";
+
+            weekGames.push({
+              outcome,
+              timeClass: g.time_class || "unknown",
+              dayKey: dayKeyFor(playedAt),
+              rating: typeof me.rating === "number" ? me.rating : null,
+              endTime: g.end_time,
+            });
+          }
+        }
+
+        return weekGames;
+      }
+
+      let currentGames = [];
+      let currentFilter = "all";
+      let currentDayKey = null;
+      let weekDays = []; // [{key, label: 'Mon', num: 12, isToday}]
+
+      function buildWeekDays(weekStart) {
+        const today = new Date();
+        const todayKey = dayKeyFor(today);
+        const days = [];
+        for (let i = 0; i < 7; i++) {
+          const d = new Date(
+            weekStart.getFullYear(),
+            weekStart.getMonth(),
+            weekStart.getDate() + i,
+          );
+          const key = dayKeyFor(d);
+          days.push({
+            key,
+            // Derived from the date itself — the window no longer starts on a fixed weekday.
+            label: d.toLocaleDateString(undefined, { weekday: "short" }),
+            num: d.getDate(),
+            isToday: key === todayKey,
+            date: d,
+          });
+        }
+        return days;
+      }
+
+      function fullDayLabel(d) {
+        // "Today" if today, else e.g. "Tue, Aug 11"
+        if (d.isToday) return "Today";
+        return `${d.label}, ${monthAbbrevFor(d)} ${d.num}`;
+      }
+
+      function monthAbbrevFor(d) {
+        return d.date.toLocaleDateString(undefined, { month: "short" });
+      }
+
+      function renderDayDropdown() {
+        dayDropdown.innerHTML = "";
+        for (const d of weekDays) {
+          const btn = document.createElement("button");
+          btn.className =
+            "day-option" +
+            (d.key === currentDayKey ? " selected" : "") +
+            (d.isToday ? " is-today" : "");
+          btn.dataset.day = d.key;
+          btn.innerHTML = `<span>${d.label}, ${monthAbbrevFor(d)} ${d.num}</span><span class="dot"></span>`;
+          dayDropdown.appendChild(btn);
+        }
+      }
+
+      function updateDateLabelText() {
+        const selectedDay = weekDays.find((d) => d.key === currentDayKey);
+        dateLabel.textContent = selectedDay ? fullDayLabel(selectedDay) : "";
+      }
+
+      function closeDropdown() {
+        dayDropdown.classList.add("hidden");
+      }
+
+      function toggleDropdown() {
+        dayDropdown.classList.toggle("hidden");
+      }
+
+      // Single source of truth for the numbers, so the share image can never
+      // disagree with what's on screen.
+      function currentTally() {
+        let filtered = currentGames.filter((g) => g.dayKey === currentDayKey);
+        if (currentFilter !== "all") {
+          filtered = filtered.filter((g) => g.timeClass === currentFilter);
+        }
+        return {
+          wins: filtered.filter((g) => g.outcome === "win").length,
+          losses: filtered.filter((g) => g.outcome === "loss").length,
+          draws: filtered.filter((g) => g.outcome === "draw").length,
+          total: filtered.length,
+        };
+      }
+
+      // Rating only means something within a single time class, so this is
+      // null under the "All" filter — a day mixing blitz and rapid has no one
+      // rating. Ratings are post-game, so the day's starting point is the
+      // rating carried out of the last game BEFORE that day; without one in
+      // the fetched window we show the rating but no delta rather than guess.
+      function currentRating() {
+        if (currentFilter === "all") return null;
+
+        const inClass = currentGames
+          .filter((g) => g.timeClass === currentFilter && g.rating !== null)
+          .sort((a, b) => a.endTime - b.endTime);
+
+        const firstIdx = inClass.findIndex((g) => g.dayKey === currentDayKey);
+        if (firstIdx === -1) return null;
+
+        let lastIdx = firstIdx;
+        while (
+          lastIdx + 1 < inClass.length &&
+          inClass[lastIdx + 1].dayKey === currentDayKey
+        ) {
+          lastIdx++;
+        }
+
+        const rating = inClass[lastIdx].rating;
+        const prior = firstIdx > 0 ? inClass[firstIdx - 1].rating : null;
+        return { rating, delta: prior === null ? null : rating - prior };
+      }
+
+      function renderRating() {
+        const info = currentRating();
+        if (!info) {
+          ratingLine.textContent = "";
+          ratingLine.classList.add("hidden");
+          return;
+        }
+        ratingLine.classList.remove("hidden");
+        ratingLine.innerHTML = "";
+
+        const label = document.createElement("span");
+        label.className = "rating-label";
+        label.textContent = currentFilter + " rating";
+        const value = document.createElement("span");
+        value.className = "rating-value";
+        value.textContent = info.rating;
+        ratingLine.append(label, value);
+
+        if (info.delta !== null && info.delta !== 0) {
+          const d = document.createElement("span");
+          d.className = "rating-delta " + (info.delta > 0 ? "up" : "down");
+          d.textContent = (info.delta > 0 ? "+" : "") + info.delta;
+          ratingLine.appendChild(d);
+        }
+      }
+
+      function renderStatsForFilter() {
+        const { wins, losses, draws, total } = currentTally();
+
+        winCount.textContent = wins;
+        lossCount.textContent = losses;
+        drawCount.textContent = draws;
+
+        const selectedDay = weekDays.find((d) => d.key === currentDayKey);
+        const dayText = selectedDay
+          ? selectedDay.isToday
+            ? "today"
+            : `on ${selectedDay.label}`
+          : "this day";
+        metaLine.textContent =
+          total === 0
+            ? `no games played ${dayText}`
+            : `${total} game${total === 1 ? "" : "s"} ${dayText}`;
+
+        renderRating();
+      }
+
+      function setFilter(filter) {
+        currentFilter = filter;
+        for (const chip of chipRow.querySelectorAll(".chip")) {
+          chip.classList.toggle("active", chip.dataset.filter === filter);
+        }
+        renderStatsForFilter();
+      }
+
+      function setDay(dayKey) {
+        currentDayKey = dayKey;
+        updateDateLabelText();
+        renderDayDropdown();
+        closeDropdown();
+        renderStatsForFilter();
+      }
+
+      let toastTimer = null;
+      function showToast(message, variant) {
+        clearTimeout(toastTimer);
+        toast.textContent = message;
+        toast.classList.toggle("error", variant === "error");
+        toast.classList.add("show");
+        toastTimer = setTimeout(
+          () => toast.classList.remove("show"),
+          variant === "error" ? 6000 : 5000,
+        );
+      }
+
+      function hideToast() {
+        clearTimeout(toastTimer);
+        toast.classList.remove("show");
+      }
+
+      // Only called when the week came back empty, so an existing account with
+      // recent games costs no extra request.
+      async function accountExists(username) {
+        const res = await fetchJsonWithCorsFallback(
+          `https://api.chess.com/pub/player/${encodeURIComponent(username.toLowerCase())}`,
+        );
+        return res.status !== 404;
+      }
+
+      let loadInFlight = false;
+
+      async function loadAndRender(username) {
+        // Without this, holding Enter or spamming "Track this account" stacks
+        // concurrent loads, each firing its own archive requests.
+        if (loadInFlight) return;
+        loadInFlight = true;
+        saveBtn.disabled = true;
+        hideToast();
+
+        displayName.textContent = username;
+        setupView.classList.add("hidden");
+        statsView.classList.remove("hidden");
+        datePicker.classList.remove("hidden");
+        metaLine.innerHTML =
+          '<span class="spinner"></span> loading this week\'s games…';
+        winCount.textContent = "–";
+        lossCount.textContent = "–";
+        drawCount.textContent = "–";
+        ratingLine.classList.add("hidden");
+
+        const { start } = getWeekRange(new Date());
+        weekDays = buildWeekDays(start);
+        currentDayKey = dayKeyFor(new Date());
+        updateDateLabelText();
+        renderDayDropdown();
+        setFilter("all");
+
+        try {
+          currentGames = await fetchWeekGames(username);
+
+          // An empty week is ambiguous: a typo'd name and a real-but-inactive
+          // account both yield zero games. Only here is it worth one request
+          // to tell them apart.
+          if (currentGames.length === 0) {
+            let exists = null;
+            try {
+              exists = await accountExists(username);
+            } catch {
+              // Network trouble on the check — say nothing rather than guess.
+            }
+
+            if (exists === false) {
+              // saveBtn persists before validating, so clear it — otherwise a
+              // typo sticks and re-errors on every future page load.
+              localStorage.removeItem(STORAGE_KEY);
+              showToast(
+                `No chess.com account named "${username}" — check the spelling.`,
+                "error",
+              );
+              showSetup(username);
+              return;
+            }
+            if (exists === true) {
+              showToast(`${username} is a real account — no games in the last 7 days.`);
+            }
+          }
+
+          renderStatsForFilter();
+        } catch (err) {
+          if (err instanceof RateLimitError) {
+            const wait = err.retryAfter
+              ? `try again in ${err.retryAfter}s`
+              : "try again in a moment";
+            metaLine.innerHTML = `<span class="error">chess.com is rate limiting — ${wait}</span>`;
+          } else {
+            metaLine.innerHTML = `<span class="error">couldn't load — check the username, or try again</span>`;
+          }
+          console.error(err);
+        } finally {
+          loadInFlight = false;
+          saveBtn.disabled = false;
+        }
+      }
+
+      function showSetup(prefill) {
+        statsView.classList.add("hidden");
+        setupView.classList.remove("hidden");
+        datePicker.classList.add("hidden");
+        closeDropdown();
+        usernameInput.value = prefill || "";
+        usernameInput.focus();
+      }
+
+      // ---- share image -------------------------------------------------
+      // Composed on a canvas rather than screenshotting the DOM: no
+      // dependency, renders at 2x for crisp output, and lets the shared
+      // artifact be laid out for sharing instead of being a cramped copy
+      // of the UI. The point of the image is to carry SITE_URL somewhere a
+      // screenshot can't, so the footer is the one non-negotiable element.
+      const SITE_URL = "chess.rahulsetia.me";
+      const MONO = '"Courier New", ui-monospace, monospace';
+
+      function roundRect(ctx, x, y, w, h, r) {
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.arcTo(x + w, y, x + w, y + h, r);
+        ctx.arcTo(x + w, y + h, x, y + h, r);
+        ctx.arcTo(x, y + h, x, y, r);
+        ctx.arcTo(x, y, x + w, y, r);
+        ctx.closePath();
+      }
+
+      // Same rook as the favicon, drawn on a 32x32 grid then scaled. A rook
+      // rather than a pawn: chess.com's mark is a green pawn, and this app is
+      // also green — too close for a logo that exists to be shared around.
+      function drawMark(ctx, x, y, size, color) {
+        const s = size / 32;
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(s, s);
+        ctx.fillStyle = color;
+
+        // crenellated top
+        ctx.beginPath();
+        ctx.moveTo(7, 5);
+        ctx.lineTo(11, 5);
+        ctx.lineTo(11, 8.5);
+        ctx.lineTo(14, 8.5);
+        ctx.lineTo(14, 5);
+        ctx.lineTo(18, 5);
+        ctx.lineTo(18, 8.5);
+        ctx.lineTo(21, 8.5);
+        ctx.lineTo(21, 5);
+        ctx.lineTo(25, 5);
+        ctx.lineTo(25, 11.5);
+        ctx.lineTo(7, 11.5);
+        ctx.closePath();
+        ctx.fill();
+
+        // tapering body (starts at 11 to overlap the band and avoid a seam)
+        ctx.beginPath();
+        ctx.moveTo(10, 11);
+        ctx.lineTo(22, 11);
+        ctx.lineTo(20.5, 20);
+        ctx.lineTo(11.5, 20);
+        ctx.closePath();
+        ctx.fill();
+
+        roundRect(ctx, 7, 19.5, 18, 4.5, 1.5);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function renderShareCanvas() {
+        const S = 540; // logical size
+        const SCALE = 2; // export at 1080x1080
+        const canvas = document.createElement("canvas");
+        canvas.width = S * SCALE;
+        canvas.height = S * SCALE;
+        const ctx = canvas.getContext("2d");
+        ctx.scale(SCALE, SCALE);
+        ctx.textBaseline = "alphabetic";
+
+        // background + the same corner blooms as the page
+        ctx.fillStyle = "#0f1210";
+        ctx.fillRect(0, 0, S, S);
+        for (const [cx, cy, a] of [
+          [S * 0.2, S * 0.2, 0.06],
+          [S * 0.8, S * 0.8, 0.04],
+        ]) {
+          const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, S * 0.55);
+          g.addColorStop(0, `rgba(134,239,172,${a})`);
+          g.addColorStop(1, "rgba(134,239,172,0)");
+          ctx.fillStyle = g;
+          ctx.fillRect(0, 0, S, S);
+        }
+
+        // panel
+        const P = 40;
+        ctx.fillStyle = "#171b18";
+        roundRect(ctx, P, P, S - P * 2, S - P * 2, 26);
+        ctx.fill();
+        ctx.strokeStyle = "#262b26";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        const { wins, losses, draws, total } = currentTally();
+        const selectedDay = weekDays.find((d) => d.key === currentDayKey);
+        const dayText = selectedDay ? fullDayLabel(selectedDay) : "";
+        const username = displayName.textContent || "";
+
+        // title, with the date stacked on the line beneath it
+        drawMark(ctx, P + 34, P + 32, 28, "#86efac");
+        ctx.fillStyle = "#e8ece7";
+        ctx.font = `700 27px ${MONO}`;
+        ctx.textAlign = "left";
+        ctx.fillText("Chess Record", P + 72, P + 56);
+
+        const scope =
+          currentFilter === "all"
+            ? dayText
+            : `${dayText} · ${currentFilter.toUpperCase()}`;
+        ctx.fillStyle = "#7c8a7e";
+        ctx.font = `14px ${MONO}`;
+        ctx.fillText(scope.toUpperCase(), P + 34, P + 86);
+
+        // three stat tiles
+        const tiles = [
+          ["WON", wins, "#4ade80"],
+          ["LOST", losses, "#f87171"],
+          ["DREW", draws, "#94a3b8"],
+        ];
+        // The rating line only exists under a time-class filter, so the tiles
+        // give up a little height to make room rather than leaving a gap
+        // under "All".
+        const rating = currentRating();
+        const gap = 14;
+        const tw = (S - P * 2 - 68 - gap * 2) / 3;
+        const th = rating ? 168 : 180;
+        const ty = P + (rating ? 108 : 114);
+        tiles.forEach(([label, value, color], i) => {
+          const tx = P + 34 + i * (tw + gap);
+          ctx.fillStyle = "#0f1210";
+          roundRect(ctx, tx, ty, tw, th, 14);
+          ctx.fill();
+          ctx.strokeStyle = "#262b26";
+          ctx.stroke();
+
+          ctx.textAlign = "center";
+          ctx.fillStyle = "#7c8a7e";
+          ctx.font = `13px ${MONO}`;
+          ctx.fillText(label, tx + tw / 2, ty + 44);
+          ctx.fillStyle = color;
+          ctx.font = `700 ${rating ? 64 : 70}px ${MONO}`;
+          ctx.fillText(String(value), tx + tw / 2, ty + (rating ? 124 : 132));
+        });
+
+        // rating + day's delta, centred as one lockup
+        if (rating) {
+          const ry = ty + th + 46;
+          const label = `${currentFilter.toUpperCase()} RATING`;
+          const value = String(rating.rating);
+          const delta =
+            rating.delta === null || rating.delta === 0
+              ? ""
+              : (rating.delta > 0 ? "+" : "") + rating.delta;
+
+          ctx.font = `12px ${MONO}`;
+          const labelW = ctx.measureText(label).width;
+          ctx.font = `700 30px ${MONO}`;
+          const valueW = ctx.measureText(value).width;
+          ctx.font = `700 15px ${MONO}`;
+          const deltaW = delta ? ctx.measureText(delta).width : 0;
+
+          const gapA = 10;
+          const gapB = delta ? 8 : 0;
+          let rx = (S - (labelW + gapA + valueW + gapB + deltaW)) / 2;
+
+          ctx.textAlign = "left";
+          ctx.fillStyle = "#7c8a7e";
+          ctx.font = `12px ${MONO}`;
+          ctx.fillText(label, rx, ry);
+          rx += labelW + gapA;
+
+          ctx.fillStyle = "#e8ece7";
+          ctx.font = `700 30px ${MONO}`;
+          ctx.fillText(value, rx, ry);
+          rx += valueW + gapB;
+
+          if (delta) {
+            ctx.fillStyle = rating.delta > 0 ? "#4ade80" : "#f87171";
+            ctx.font = `700 15px ${MONO}`;
+            ctx.fillText(delta, rx, ry);
+          }
+        }
+
+        // whose record it is + the total, on one line
+        ctx.textAlign = "center";
+        ctx.font = `15px ${MONO}`;
+        const tally =
+          total === 0
+            ? "no games played"
+            : `${total} game${total === 1 ? "" : "s"} played`;
+        const lineY = ty + th + (rating ? 82 : 50);
+        const nameW = ctx.measureText(username).width;
+        const sepW = ctx.measureText("  ·  ").width;
+        const tallyW = ctx.measureText(tally).width;
+        let lx = (S - (nameW + sepW + tallyW)) / 2;
+        ctx.textAlign = "left";
+        ctx.fillStyle = "#e8ece7";
+        ctx.fillText(username, lx, lineY);
+        lx += nameW;
+        ctx.fillStyle = "#3a413b";
+        ctx.fillText("  ·  ", lx, lineY);
+        lx += sepW;
+        ctx.fillStyle = "#7c8a7e";
+        ctx.fillText(tally, lx, lineY);
+
+        // brand footer — the reason this image exists
+        const footY = S - P - 34;
+        ctx.strokeStyle = "#262b26";
+        ctx.beginPath();
+        ctx.moveTo(P + 34, footY - 28);
+        ctx.lineTo(S - P - 34, footY - 28);
+        ctx.stroke();
+
+        ctx.font = `600 15px ${MONO}`;
+        const urlW = ctx.measureText(SITE_URL).width;
+        const markW = 20;
+        const startX = (S - (markW + 10 + urlW)) / 2;
+        drawMark(ctx, startX, footY - 15, markW, "#86efac");
+        ctx.textAlign = "left";
+        ctx.fillStyle = "#86efac";
+        ctx.fillText(SITE_URL, startX + markW + 10, footY);
+
+        return canvas;
+      }
+
+      function canvasToBlob(canvas) {
+        return new Promise((resolve, reject) =>
+          canvas.toBlob(
+            (b) => (b ? resolve(b) : reject(new Error("toBlob failed"))),
+            "image/png",
+          ),
+        );
+      }
+
+      let shareResetTimer = null;
+      function flashShareLabel(text) {
+        clearTimeout(shareResetTimer);
+        shareLabel.textContent = text;
+        shareBtn.classList.add("done");
+        shareResetTimer = setTimeout(() => {
+          shareLabel.textContent = "Share";
+          shareBtn.classList.remove("done");
+        }, 1800);
+      }
+
+      async function shareRecord() {
+        shareBtn.disabled = true;
+        try {
+          const blob = await canvasToBlob(renderShareCanvas());
+          const name = `${(displayName.textContent || "chess").replace(/[^\w-]/g, "")}-record.png`;
+          const file = new File([blob], name, { type: "image/png" });
+
+          // On mobile the native sheet goes straight to Messages/WhatsApp/
+          // Stories, which is where this actually gets sent. Download is the
+          // desktop fallback.
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({ files: [file] });
+            flashShareLabel("Shared");
+          } else {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = name;
+            a.click();
+            URL.revokeObjectURL(url);
+            flashShareLabel("Saved");
+          }
+        } catch (err) {
+          // Dismissing the share sheet rejects with AbortError — not an error.
+          if (err && err.name === "AbortError") return;
+          console.error(err);
+          flashShareLabel("Failed");
+        } finally {
+          shareBtn.disabled = false;
+        }
+      }
+
+      shareBtn.addEventListener("click", shareRecord);
+
+      // ---- grandmaster suggestions ---------------------------------------
+      // chess.com has no username search endpoint, but it does publish the
+      // full titled-player lists. GMs are 1,720 names (~11KB gzipped), so we
+      // fetch once, cache, and filter client-side — no per-keystroke request.
+      const GM_LIST_URL = "https://api.chess.com/pub/titled/GM";
+      const MAX_SUGGESTIONS = 6;
+
+      // Hand-picked well-known accounts, ranked by follower count (checked
+      // against /pub/player/{name}, Aug 2026). These jump ahead of the GM
+      // list, which is alphabetical and would otherwise bury them.
+      //
+      // Two reasons this list is necessary rather than nice-to-have:
+      //   - The biggest names aren't all GMs. gothamchess (188k) is an IM and
+      //     alexandrabotez (76k) a WFM, so neither is in /titled/GM at all.
+      //   - Several obvious handles are squatters, not the real player:
+      //     dingliren (2 followers), botezlive (14), ericrosen (25),
+      //     andreabotez (0), qiyuzhou (0). Deliberately omitted — the real
+      //     Eric Rosen is imrosen.
+      // [username, title, real name] — title is "" for untitled creators.
+      const FEATURED = [
+        ["hikaru", "GM", "Hikaru Nakamura"], // 1.41M
+        ["danielrensch", "IM", "Daniel Rensch"], // 437k
+        ["magnuscarlsen", "GM", "Magnus Carlsen"], // 310k
+        ["gothamchess", "IM", "Levy Rozman"], // 188k
+        ["alexandrabotez", "WFM", "Alexandra Botez"], // 76k
+        ["danielnaroditsky", "GM", "Daniel Naroditsky"], // 45k
+        ["jospem", "GM", "Jose Martinez"], // 34k
+        ["annacramling", "WFM", "Anna Cramling"], // 34k
+        ["samcopeland", "NM", "Sam Copeland"], // 32k
+        ["firouzja2003", "GM", "Alireza Firouzja"], // 32k
+        ["chessbrah", "GM", "Chessbrah TV"], // 26k
+        ["thechessnerd", "", "Zachary Saine"], // 25k
+        ["fabianocaruana", "GM", "Fabiano Caruana"], // 25k
+        ["nihalsarin", "GM", "Nihal Sarin"], // 22k
+        ["viditchess", "GM", "Vidit Gujrathi"], // 18k
+        ["lachesisq", "GM", "Ian Nepomniachtchi"], // 17k
+        ["gukeshdommaraju", "GM", "Gukesh D"], // 15k
+        ["rpragchess", "GM", "Praggnanandhaa"], // 15k
+        ["anishgiri", "GM", "Anish Giri"], // 11k
+        ["gmwso", "GM", "Wesley So"], // 11k
+        ["nemsko", "WGM", "Nemo Zhou"], // 11k
+        ["penguingm1", "GM", "Andrew Tang"], // 10k
+        ["agadmator", "", "Antonio Radic"], // 9.3k
+        ["polish_fighter3000", "GM", "Jan-Krzysztof Duda"], // 9.1k
+        ["imrosen", "IM", "Eric Rosen"], // 8.5k
+        ["levonaronian", "GM", "Levon Aronian"], // 6.8k
+        ["chessnetwork", "NM", "Jerry"], // 6.7k
+      ];
+      const FEATURED_BY_NAME = new Map(
+        FEATURED.map(([name, title, real]) => [name, { title, real }]),
+      );
+
+      let gmNames = null;
+      let gmLoading = null;
+      let suggestions = [];
+      let activeIndex = -1;
+
+      function loadGmNames() {
+        if (gmNames) return Promise.resolve(gmNames);
+        if (gmLoading) return gmLoading;
+        gmLoading = fetchJsonWithCorsFallback(GM_LIST_URL)
+          .then((res) => {
+            gmNames = res.status === 200 ? res.data.players || [] : [];
+            return gmNames;
+          })
+          .catch(() => {
+            // Suggestions are a convenience — never block typing on them.
+            gmNames = [];
+            return gmNames;
+          });
+        return gmLoading;
+      }
+
+      function closeSuggest() {
+        gmSuggest.classList.add("hidden");
+        usernameInput.setAttribute("aria-expanded", "false");
+        suggestions = [];
+        activeIndex = -1;
+      }
+
+      function renderSuggestions() {
+        gmSuggestList.innerHTML = "";
+        if (!suggestions.length) {
+          closeSuggest();
+          return;
+        }
+        suggestions.forEach(({ name, title, real }, i) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "suggest-item" + (i === activeIndex ? " active" : "");
+          btn.setAttribute("role", "option");
+          btn.setAttribute("aria-selected", String(i === activeIndex));
+
+          const left = document.createElement("span");
+          left.className = "suggest-name";
+          // Always rendered — untitled creators get an invisible spacer so
+          // every username still starts on the same column.
+          const badge = document.createElement("span");
+          badge.className = "title-badge" + (title ? "" : " empty");
+          badge.textContent = title;
+          left.appendChild(badge);
+          left.appendChild(document.createTextNode(name));
+          btn.appendChild(left);
+
+          if (real) {
+            const rn = document.createElement("span");
+            rn.className = "suggest-real";
+            rn.textContent = real;
+            btn.appendChild(rn);
+          }
+
+          btn.addEventListener("mousedown", (e) => {
+            // mousedown, not click — blur would close the list first
+            e.preventDefault();
+            chooseSuggestion(name);
+          });
+          gmSuggestList.appendChild(btn);
+        });
+        gmSuggest.classList.remove("hidden");
+        usernameInput.setAttribute("aria-expanded", "true");
+      }
+
+      function chooseSuggestion(name) {
+        usernameInput.value = name;
+        closeSuggest();
+        usernameInput.focus();
+      }
+
+      async function updateSuggestions() {
+        const query = usernameInput.value.trim().toLowerCase();
+        if (query.length < 2) {
+          closeSuggest();
+          return;
+        }
+        const names = await loadGmNames();
+        // Ignore a stale resolve if the field moved on while fetching.
+        if (usernameInput.value.trim().toLowerCase() !== query) return;
+
+        // Featured names first (ranked by real-world following), then the
+        // alphabetical GM list, skipping anything already featured.
+        const picked = [];
+        for (const [name, title, real] of FEATURED) {
+          if (name.startsWith(query)) picked.push({ name, title, real });
+          if (picked.length === MAX_SUGGESTIONS) break;
+        }
+        if (picked.length < MAX_SUGGESTIONS) {
+          for (const n of names) {
+            if (n.startsWith(query) && !FEATURED_BY_NAME.has(n)) {
+              picked.push({ name: n, title: "GM", real: "" });
+              if (picked.length === MAX_SUGGESTIONS) break;
+            }
+          }
+        }
+        suggestions = picked;
+
+        // An exact, sole match is just what they typed — nothing to offer.
+        if (suggestions.length === 1 && suggestions[0].name === query) {
+          suggestions = [];
+        }
+        activeIndex = -1;
+        renderSuggestions();
+      }
+
+      // Cycles -1 (nothing highlighted) -> 0..n-1 -> back to -1, both ways.
+      function moveActive(delta) {
+        const n = suggestions.length;
+        if (!n) return;
+        let pos = activeIndex === -1 ? n : activeIndex;
+        pos = (pos + delta + (n + 1)) % (n + 1);
+        activeIndex = pos === n ? -1 : pos;
+        renderSuggestions();
+      }
+
+      usernameInput.addEventListener("input", updateSuggestions);
+      usernameInput.addEventListener("focus", updateSuggestions);
+      usernameInput.addEventListener("blur", () => setTimeout(closeSuggest, 0));
+
+      saveBtn.addEventListener("click", () => {
+        const username = usernameInput.value.trim();
+        if (!username) return;
+        localStorage.setItem(STORAGE_KEY, username);
+        loadAndRender(username);
+      });
+
+      usernameInput.addEventListener("keydown", (e) => {
+        const open = !gmSuggest.classList.contains("hidden");
+
+        if (e.key === "ArrowDown" && open) {
+          e.preventDefault();
+          moveActive(1);
+          return;
+        }
+        if (e.key === "ArrowUp" && open) {
+          e.preventDefault();
+          moveActive(-1);
+          return;
+        }
+        if (e.key === "Escape" && open) {
+          e.preventDefault();
+          closeSuggest();
+          return;
+        }
+        if (e.key === "Enter") {
+          // Enter commits a highlighted suggestion; otherwise it submits.
+          if (open && activeIndex >= 0) {
+            e.preventDefault();
+            chooseSuggestion(suggestions[activeIndex].name);
+            return;
+          }
+          closeSuggest();
+          saveBtn.click();
+        }
+      });
+
+      changeBtn.addEventListener("click", () => {
+        hideToast();
+        showSetup(localStorage.getItem(STORAGE_KEY));
+      });
+
+      chipRow.addEventListener("click", (e) => {
+        const chip = e.target.closest(".chip");
+        if (!chip) return;
+        setFilter(chip.dataset.filter);
+      });
+
+      dateLabel.addEventListener("click", (e) => {
+        e.stopPropagation();
+        toggleDropdown();
+      });
+
+      dayDropdown.addEventListener("click", (e) => {
+        const opt = e.target.closest(".day-option");
+        if (!opt) return;
+        setDay(opt.dataset.day);
+      });
+
+      document.addEventListener("click", (e) => {
+        if (!dayDropdown.contains(e.target) && e.target !== dateLabel) {
+          closeDropdown();
+        }
+      });
+
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        loadAndRender(saved);
+      } else {
+        showSetup();
+      }
+    </script>
+  </body>
+</html>
